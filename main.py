@@ -108,14 +108,12 @@ def retrieve_assistant_response(thread_id, run_id, sleep_interval=5):
                 formatted_elapsed_time = time.strftime(
                     "%H:%M:%S", time.gmtime(elapsed_time)
                 )
-                print(f"Run completed in {formatted_elapsed_time}")
                 logging.info(f"Run completed in {formatted_elapsed_time}")
                 # Get messages once run is complete
                 messages = client.beta.threads.messages.list(thread_id=thread_id)
                 last_message = messages.data[0]
                 response = last_message.content[0].text.value
-                print(f"Assistant Response: {response}")
-                break
+                return response
         except Exception as e:
             logging.error(f"An error occurred while retrieving the run: {e}")
             break
@@ -164,12 +162,12 @@ def main():
 
 # ====================================STREAMLIT APP====================================
 
-    st.set_page_config(page_title="Sea Level Rise Assistant", page_icon="🌊")
+    #st.set_page_config(page_title="Sea Level Rise Assistant", page_icon="🌊")
 
-    st.title("Sea Level Rise Assistant")
+    #st.title("Sea Level Rise Assistant")
 
-    st.write("I am a chatbot that has been pre-loaded with the City_of_Arcata_Sea_Level_Rise_Vulnerability_Assessment"
-             "and City_of_Arcata_LCP_Update_DRAFT.")
+    #st.write("I am a chatbot that has been pre-loaded with the City_of_Arcata_Sea_Level_Rise_Vulnerability_Assessment"
+    #         "and City_of_Arcata_LCP_Update_DRAFT.")
 
     # Initialize Streamlit session state
     if "messages" not in st.session_state:
