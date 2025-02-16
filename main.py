@@ -1,11 +1,8 @@
-import openai
 import os
-from dotenv import find_dotenv, load_dotenv
-from pathlib import Path
+from dotenv import load_dotenv
 from openai import OpenAI
 import time
 import logging
-from datetime import datetime
 import streamlit as st
 
 load_dotenv()
