@@ -226,7 +226,7 @@ def main():
 
     st.set_page_config(page_title="Sea Level Rise Assistant", page_icon="🌊")
 
-    st.title("Sea Level Rise Assistant")
+    st.title("🌊 Sea Level Rise Assistant")
 
     st.write(
         "Hello! I’m a chatbot powered by OpenAI’s GPT-3.5. I can answer questions about sea level rise in Arcata, "
