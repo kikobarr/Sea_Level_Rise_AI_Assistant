@@ -228,8 +228,14 @@ def main():
 
     st.title("Sea Level Rise Assistant")
 
-    st.write("I am a chatbot that has been pre-loaded with the City_of_Arcata_Sea_Level_Rise_Vulnerability_Assessment"
-             "and City_of_Arcata_LCP_Update_DRAFT.")
+    st.write(
+        "Hello! I’m a chatbot powered by OpenAI’s GPT-3.5. I can answer questions about sea level rise in Arcata, "
+        "using information from the *City of Arcata’s 2018 Sea Level Rise Vulnerability Assessment* and the *City of "
+        "Arcata’s 2023 Draft Local Coastal Program Update.* "
+        "Feel free to ask me about these documents or sea level rise in Arcata in general.  \n\n"
+        "**Note:** While I strive to provide accurate information, please verify details by reviewing the reports or "
+        "consulting City staff directly."
+    )
 
     # Streamlit's Session State: a dictionary like-object which tracks user action's on the page.
     # Every user event causes the app to refresh and run the code from the top. When it refreshes,
