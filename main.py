@@ -1,42 +1,64 @@
 from dotenv import load_dotenv
 import openai
-from openai import OpenAI
 import time
 import logging
 import streamlit as st
 
+# manage the API secret key
 load_dotenv()
 openai.api_key = st.secrets["OPENAI_API_KEY"]
-# Create an instance of the OpenAI API
-client = OpenAI()
 
-def upload_files(filepaths):
-    """Uploads multiple documents to files endpoint and returns the file ids."""
+def upload_files(client, filepaths):
+    """
+    Uploads multiple documents to API files endpoint, returns an array of the file ids
+    and prints a confirmation message with the # of files that were uploaded.
 
-    uploaded_files = []
+    :param client: instance of the OpenAI API
+    :param filepaths: array of the filepaths for the files to upload
+    :return: file_ids: array of the file ids for the files that were uploaded
+    """
+
+    file_ids = []
     count = 0
     for path in filepaths:
         file = client.files.create(
             file=open(path, "rb"),
             purpose="assistants"
         )
-        uploaded_files.append(file.id)
+        file_ids.append(file.id)
         count +=1
     print(f"{count} file(s) uploaded")
-    return uploaded_files
+    return file_ids
 
 
-def create_vector_store(vector_store_name):
-    """Creates a new vector store and returns the ID."""
+def create_vector_store(client, vector_store_name):
+    """
+    Creates a new vector store which is accessible by the AI Assistant's file
+    search tool. Returns the vector store's ID as a string.
+
+    :param client: instance of the OpenAI API
+    :param vector_store_name: string, desired name of the vector store
+    :return: vector_store.id: string, id of the newly created vector store
+    """
+
     vector_store = client.beta.vector_stores.create(name=vector_store_name)
     print(f"{vector_store_name} vector store was created with ID: {vector_store.id}")
     return vector_store.id
 
 
-def attach_file_to_vector_store(vector_store_id, file_ids):
+def attach_file_to_vector_store(client, vector_store_id, file_ids):
+    """
+    Attaches files to vector store. This is OpenAI API's way for the GPT to read the files.
+    Prints a confirmation with a count of hte number of files added to the vector store.
+
+    :param client:  instance of the OpenAI API
+    :param vector_store_id: string, id of the vector store
+    :param file_ids: array of strings, ids of the files
+    :return: None
+    """
     count = 0
     for file_id in file_ids:
-        vector_store_file = client.beta.vector_stores.files.create(
+        client.beta.vector_stores.files.create(
             vector_store_id=vector_store_id,
             file_id=file_id
         )
@@ -44,8 +66,19 @@ def attach_file_to_vector_store(vector_store_id, file_ids):
     print(f"{count} file(s) added to vector store")
 
 
-def create_assistant(assistant_name, instructions, vector_store_id, model):
-    """Creates a new assistant with capability to use the file search tool."""
+def create_assistant(client, assistant_name, instructions, vector_store_id, model):
+    """
+    Creates a new assistant with capability to use the file search tool.
+
+    :param client: instance of the OpenAI API
+    :param assistant_name: string, desired name of the Assistant
+    :param instructions: string, detailed instructions for Assistant's persona, tone, and way it should
+                         respond to prompts (Ex. You are a Michellin star chef who gives advice...)
+    :param vector_store_id: string, id of the vector store to associate with the Assistant
+    :param model: string, alias of the GPT model (Ex. GPT-4o)
+                  Full list of aliases: https://platform.openai.com/docs/models/gpt-4#current-model-aliases
+    :return: assistant.id: string, id for the newly created Assistant
+    """
 
     assistant = client.beta.assistants.create(
         name=assistant_name,
@@ -58,35 +91,54 @@ def create_assistant(assistant_name, instructions, vector_store_id, model):
     return assistant.id
 
 
-def create_thread():
-    """Creates a thread. Threads are 'a conversation session between an Assistant and a user. Threads store Messages
-    and automatically handle truncation to fit content into a model’s context.'"""
-    # TODO: thread can also have a tool_resources with file_search with vector_store_ids... better to have the files
-    #  embedded in the assistant or the thread? probably the assistant...
+def create_thread(client):
+    """
+    Creates a thread. OpenAI's API documentation describe a thread as 'a conversation session
+    between an Assistant and a user. Threads store Messages.'
+
+    :param client: instance of the OpenAI API
+    :return: thread.id: string, id of the newly created thread
+    """
+
     thread = client.beta.threads.create()
     print(f"Thread created with ID: {thread.id}")
     return thread.id
 
 
-def add_user_message_to_thread(thread_id, message):
+def add_user_message_to_thread(client, thread_id, message):
     """
-    Sends the user's prompt to the API
-    https://platform.openai.com/docs/api-reference/messages/object
+    Appends the user message to the thread so the Assistant has access to the content.
+    Otherwise, no action is taken. The AI will generate a response in a later step.
+
+    :param client: instance of the OpenAI API
+    :param thread_id: string, id of the thread, which is one conversation session between Assistant and user
+    :param message: string, the content of the user's prompt or message
+    :return: None
     """
-    message = client.beta.threads.messages.create(
+
+    client.beta.threads.messages.create(
         thread_id=thread_id,
         role="user",
         content=message
     )
 
-    #return message.id
 
+def create_run(client, thread_id, assistant_id):
+    """
+    Creates a run which OpenAI API documentation describes as 'an invocation of an Assistant on a Thread...
+    As part of a Run, the Assistant appends [its own] Messages to the Thread.'
 
-def create_run(thread_id, assistant_id):
+    Note: While needing to create a run in order to produce a response from the AI seems like an unnecessary 
+          extra step, it allows for more options. For example, see that you need to specify the assistant_id-- 
+          you can actually have several assistants chiming into one conversation by changing the assistant_id 
+          that is specified for each run.
+
+    :param client: instance of the OpenAI API
+    :param thread_id: string, id of the thread, which is one conversation session between Assistant and user
+    :param assistant_id: string, id of the Assistant whose response is desired
+    :return: run_id: string, id of the run action
     """
-    Creates a run. A run is 'an invocation of an Assistant on a Thread...
-    As part of a Run, the Assistant appends Messages to the Thread.'
-    """
+
     run = client.beta.threads.runs.create(
         thread_id=thread_id,
         assistant_id=assistant_id,
@@ -95,8 +147,16 @@ def create_run(thread_id, assistant_id):
     return run.id
 
 
-def retrieve_assistant_response(thread_id, run_id, sleep_interval=5):
-    """Waits for a run to complete and prints the elapsed time and the assistant's message."""
+def retrieve_assistant_response(client, thread_id, run_id):
+    """
+    Waits for a run to complete and prints the elapsed time and the assistant's message.
+
+    :param client: instance of the OpenAI API
+    :param thread_id: string, id of the current thread
+    :param run_id: string, id of the latest run
+    :return: response: string, content of the AI Assistant's response.
+    """
+
     while True:
         try:
             run = client.beta.threads.runs.retrieve(thread_id=thread_id, run_id=run_id)
@@ -115,15 +175,19 @@ def retrieve_assistant_response(thread_id, run_id, sleep_interval=5):
             logging.error(f"An error occurred while retrieving the run: {e}")
             break
         logging.info("Waiting for run to complete...")
-        time.sleep(sleep_interval)
+        time.sleep(5)
 
 
 def main():
 
+    # Create an OpenAI client instance that uses the API key from environment variables
+    client = openai.OpenAI()
+
+    # =======================Code used one time to upload files to API endpoint and create Assistant==================
+
     # 1. Upload files to the files endpoint and get file IDs
-    # filepath_1 = os.path.join("documents", "City_of_Arcata_Sea_Level_Rise_Vulnerability_Assessment.pdf")
-    # filepath_2 = os.path.join("documents", "City_of_Arcata_LCP_Update_DRAFT.pdf")
-    # filepaths = [filepath_1, filepath_2]
+    # filepaths = [os.path.join("documents", "City_of_Arcata_Sea_Level_Rise_Vulnerability_Assessment.pdf"),
+    #              os.path.join("documents", "City_of_Arcata_LCP_Update_DRAFT.pdf")]
     # file_ids = upload_files(client, filepaths)
 
     # 2. Create a vector store and get the vector store ID
@@ -140,9 +204,10 @@ def main():
     #                                 California. Speak tersely. As much as possible, cite and quote from documents to
     #                                 support your answers.""",
     #                                 vector_store_id,
-    #                                 "gpt-3.5-turbo-0125",
-    #                                 )
+    #                                 "gpt-3.5-turbo-0125")
     assistant_id = 'asst_mmc1upNxaYhajQbTgKo0XwMr'
+
+    # =======================Optional code: for chatting with assistant within the IDE==================
 
     # 5. Create a thread
     # thread_id = create_thread()
@@ -157,21 +222,25 @@ def main():
     # 9. Retrieve run information
     # retrieve_assistant_response(thread_id, run_id)
 
-# ====================================STREAMLIT APP====================================
+    # ====================================STREAMLIT APP====================================
 
-    #st.set_page_config(page_title="Sea Level Rise Assistant", page_icon="🌊")
+    st.set_page_config(page_title="Sea Level Rise Assistant", page_icon="🌊")
 
-    #st.title("Sea Level Rise Assistant")
+    st.title("Sea Level Rise Assistant")
 
-    #st.write("I am a chatbot that has been pre-loaded with the City_of_Arcata_Sea_Level_Rise_Vulnerability_Assessment"
-    #         "and City_of_Arcata_LCP_Update_DRAFT.")
+    st.write("I am a chatbot that has been pre-loaded with the City_of_Arcata_Sea_Level_Rise_Vulnerability_Assessment"
+             "and City_of_Arcata_LCP_Update_DRAFT.")
+
+    # Streamlit's Session State: a dictionary like-object which tracks user action's on the page.
+    # Every user event causes the app to refresh and run the code from the top. When it refreshes,
+    # it looks at session state to track chat history and other user events.
 
     # Initialize Streamlit session state
     if "messages" not in st.session_state:
         st.session_state.messages = []
 
     if "thread" not in st.session_state:
-        st.session_state.thread = create_thread()
+        st.session_state.thread = create_thread(client)
 
     # displays chat messages from session state
     for message in st.session_state.messages:
@@ -189,30 +258,20 @@ def main():
 
         # sends user's message to OpenAI Assistant API
         # a thread is OpenAI's way of keeping track of messages in one conversation
-        add_user_message_to_thread(st.session_state.thread, user_message)
+        add_user_message_to_thread(client, st.session_state.thread, user_message)
 
         # create a run, which will produce Assistant's response
-        run_id = create_run(st.session_state.thread, assistant_id)
+        run_id = create_run(client, st.session_state.thread, assistant_id)
 
         # retrieve and store Assistant's response
-        reply_content = retrieve_assistant_response(st.session_state.thread, run_id)
+        reply_content = retrieve_assistant_response(client, st.session_state.thread, run_id)
 
         # Add assistant response to session state
         st.session_state.messages.append({"role": "assistant", "content": reply_content})
         with st.chat_message("assistant"):
             st.markdown(reply_content)
 
+    # Run app on http://localhost:8501/ with the terminal command: streamlit run main.py
 
 if __name__ == '__main__':
     main()
-
-
-# def get_vector_store_info(client):
-#     """Prints list of existing vector stores and number of files for each."""
-#
-#     # creating a list of vector stores
-#     existing_vector_stores = client.beta.vector_stores.list()
-#
-#     # Printing the name of each vector store
-#     for store in existing_vector_stores.data:
-#         print(f"Vector Store: {store.name} (ID: {store.id}) has {store.file_counts.total} file(s)")
