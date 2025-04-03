@@ -1,13 +1,13 @@
 # Sea Level Rise Chat Assistant
 [The app can be accessed here](https://sea-level-rise-ai-assistant.streamlit.app/)
 
-# Problem Statement
+## Problem Statement
 The City of Arcata is developing a sea level rise strategy in its draft Local Coastal Program and in 2018 it commissioned a study on sea level rise. Combined, the draft Local Coastal Program and the 2018 sea level rise study are 171 pages of dense scientific and burecreatif language that can mistify more than enlighten. This discourages participation and input on Arcata's sea level rise strategy from community members. 
 
-# Features
+## Features
 The Sea Level Rise Assistant is a chatbot which can answer questions about sea level rise policy and research specific to Arcata, California.
 
-# Tech Stack
+## Tech Stack
 **OpenAI Assistants API**
 Utilized to build a structured, persistent chatbot with context-aware capabilities, based on GPT-3.5. The API allows for managing threads, messages, and assistant behavior over time.
 
@@ -22,7 +22,7 @@ A Python-based web app framework used to build the chatbot’s front-end:
 * Provides a clean, interactive chat interface.
 * Supports free hosting via Streamlit Community Cloud for public access.
 
-# Installation 
+## Installation 
 1. Clone the repo 
    * In your terminal, go to the folder you want to use for your project and use the following commands 
         git clone https://github.com/yourusername/job-app-assistant.git
@@ -46,6 +46,6 @@ A Python-based web app framework used to build the chatbot’s front-end:
 6. Optional: Create a free account with [Streamlit Community Cloud] (https://streamlit.io/cloud) to host on a url
 
 
-# Acknowledgements
-Thanks to Free Code Camp for their video "OpenAI Assistants API – Course for Beginners".
+## Acknowledgements
+Thanks to Free Code Camp for their video ["OpenAI Assistants API – Course for Beginners"](https://www.youtube.com/watch?v=qHPonmSX4Ms).
 
