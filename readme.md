@@ -2,7 +2,7 @@
 [The app can be accessed here](https://sea-level-rise-ai-assistant.streamlit.app/)
 
 ## Problem Statement
-The City of Arcata is developing a sea level rise strategy in its draft Local Coastal Program and in 2018 it commissioned a study on sea level rise. Combined, the draft Local Coastal Program and the 2018 sea level rise study are 171 pages of dense scientific and burecreatif language that can mistify more than enlighten. This discourages participation and input on Arcata's sea level rise strategy from community members. 
+The City of Arcata is developing a sea level rise strategy in its draft Local Coastal Program and in 2018 it commissioned a study on sea level rise. Combined, the draft Local Coastal Program and the 2018 sea level rise study are 171 pages of dense scientific and policy language that can mistify more than enlighten. This discourages participation and input on Arcata's sea level rise strategy from community members. 
 
 ## Features
 The Sea Level Rise Assistant is a chatbot which can answer questions about sea level rise policy and research specific to Arcata, California.
